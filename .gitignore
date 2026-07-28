@@ -1,0 +1,21 @@
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# Data is not vendored — see configs/data.yaml for the source.
+data/raw/
+data/interim/
+data/quarantine/
+
+# Experiment outputs
+mlruns/
+outputs/
+.hypothesis/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+.env

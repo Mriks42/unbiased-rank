@@ -1,0 +1,36 @@
+# ESCI ingestion and split configuration.
+#
+# The ESCI dataset (Amazon Shopping Queries) is NOT vendored in this repo.
+# Download it separately and point `raw_dir` at the directory holding:
+#   shopping_queries_dataset_examples.parquet
+#   shopping_queries_dataset_products.parquet
+# Source: https://github.com/amazon-science/esci-data
+# License terms must be reviewed before any public deployment of this project.
+
+raw_dir: data/raw
+interim_dir: data/interim
+quarantine_dir: data/quarantine
+
+# ESCI ships multiple locales; this study is restricted to one to avoid
+# conflating cross-lingual retrieval effects with position-bias effects.
+locale: us
+
+# ESCI's `small_version` flag marks the reduced task-1 subset. Set true for
+# faster iteration during development; the reported experiment uses false.
+use_small_version: false
+
+split:
+  # Splits are assigned by hashing query_id, NOT by row. A row-level split
+  # would place judgments for the same query on both sides of the boundary
+  # and silently inflate every downstream metric.
+  seed: 20260727
+  train_fraction: 0.70
+  val_fraction: 0.10
+  test_fraction: 0.20
+  # Stage 3.1 power analysis: >=5000 test queries so a 0.005 NDCG@10 MDE
+  # stays detectable. Ingestion fails loudly if this floor is not met.
+  min_test_queries: 5000
+
+# Grades kept as ground truth. ESCI labels: E(xact), S(ubstitute),
+# C(omplement), I(rrelevant).
+valid_esci_labels: ["E", "S", "C", "I"]
