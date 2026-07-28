@@ -40,6 +40,7 @@ testpaths = ["tests"]
 pythonpath = ["src"]
 markers = [
     "requires_data: test needs the real ESCI dataset on disk (skipped when absent)",
+    "requires_model: test downloads/loads a real transformer (skipped when unavailable)",
 ]
 
 [tool.ruff]
