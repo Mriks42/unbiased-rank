@@ -1,0 +1,666 @@
+{
+  "settings": {
+    "n_queries": 4000,
+    "candidates_per_query": 100,
+    "top_k": 20,
+    "impressions_per_query": 5,
+    "logging_policy": "bm25",
+    "click_noise": 0.0,
+    "seed": 7
+  },
+  "sweep": [
+    {
+      "eta": 0.0,
+      "overall_click_rate": 0.5904175,
+      "ctr_rank_1": 0.79,
+      "ctr_rank_last": 0.18675,
+      "top_to_bottom_ratio": 4.230254350736279,
+      "implied_relevance_cv": 0.33719834995043046
+    },
+    {
+      "eta": 0.5,
+      "overall_click_rate": 0.247045,
+      "ctr_rank_1": 0.79,
+      "ctr_rank_last": 0.0421,
+      "top_to_bottom_ratio": 18.764845605700714,
+      "implied_relevance_cv": 0.3382488298944204
+    },
+    {
+      "eta": 1.0,
+      "overall_click_rate": 0.1272375,
+      "ctr_rank_1": 0.79,
+      "ctr_rank_last": 0.00905,
+      "top_to_bottom_ratio": 87.29281767955801,
+      "implied_relevance_cv": 0.34000531158678415
+    },
+    {
+      "eta": 1.5,
+      "overall_click_rate": 0.0808025,
+      "ctr_rank_1": 0.79,
+      "ctr_rank_last": 0.0019,
+      "top_to_bottom_ratio": 415.7894736842105,
+      "implied_relevance_cv": 0.32942865762384693
+    },
+    {
+      "eta": 2.0,
+      "overall_click_rate": 0.0609925,
+      "ctr_rank_1": 0.79,
+      "ctr_rank_last": 0.0007,
+      "top_to_bottom_ratio": 1128.5714285714287,
+      "implied_relevance_cv": 0.312658716382745
+    }
+  ],
+  "ctr_curves": {
+    "eta_0.0": [
+      {
+        "rank": 1,
+        "propensity": 1.0,
+        "ctr": 0.79,
+        "implied_relevance": 0.79
+      },
+      {
+        "rank": 2,
+        "propensity": 1.0,
+        "ctr": 0.77215,
+        "implied_relevance": 0.77215
+      },
+      {
+        "rank": 3,
+        "propensity": 1.0,
+        "ctr": 0.7546,
+        "implied_relevance": 0.7546
+      },
+      {
+        "rank": 4,
+        "propensity": 1.0,
+        "ctr": 0.74445,
+        "implied_relevance": 0.74445
+      },
+      {
+        "rank": 5,
+        "propensity": 1.0,
+        "ctr": 0.7293,
+        "implied_relevance": 0.7293
+      },
+      {
+        "rank": 6,
+        "propensity": 1.0,
+        "ctr": 0.72275,
+        "implied_relevance": 0.72275
+      },
+      {
+        "rank": 7,
+        "propensity": 1.0,
+        "ctr": 0.71425,
+        "implied_relevance": 0.71425
+      },
+      {
+        "rank": 8,
+        "propensity": 1.0,
+        "ctr": 0.6995,
+        "implied_relevance": 0.6995
+      },
+      {
+        "rank": 9,
+        "propensity": 1.0,
+        "ctr": 0.6858,
+        "implied_relevance": 0.6858
+      },
+      {
+        "rank": 10,
+        "propensity": 1.0,
+        "ctr": 0.67385,
+        "implied_relevance": 0.67385
+      },
+      {
+        "rank": 11,
+        "propensity": 1.0,
+        "ctr": 0.65845,
+        "implied_relevance": 0.65845
+      },
+      {
+        "rank": 12,
+        "propensity": 1.0,
+        "ctr": 0.6446,
+        "implied_relevance": 0.6446
+      },
+      {
+        "rank": 13,
+        "propensity": 1.0,
+        "ctr": 0.62095,
+        "implied_relevance": 0.62095
+      },
+      {
+        "rank": 14,
+        "propensity": 1.0,
+        "ctr": 0.59925,
+        "implied_relevance": 0.59925
+      },
+      {
+        "rank": 15,
+        "propensity": 1.0,
+        "ctr": 0.5684,
+        "implied_relevance": 0.5684
+      },
+      {
+        "rank": 16,
+        "propensity": 1.0,
+        "ctr": 0.52415,
+        "implied_relevance": 0.52415
+      },
+      {
+        "rank": 17,
+        "propensity": 1.0,
+        "ctr": 0.2892,
+        "implied_relevance": 0.2892
+      },
+      {
+        "rank": 18,
+        "propensity": 1.0,
+        "ctr": 0.2292,
+        "implied_relevance": 0.2292
+      },
+      {
+        "rank": 19,
+        "propensity": 1.0,
+        "ctr": 0.20075,
+        "implied_relevance": 0.20075
+      },
+      {
+        "rank": 20,
+        "propensity": 1.0,
+        "ctr": 0.18675,
+        "implied_relevance": 0.18675
+      }
+    ],
+    "eta_0.5": [
+      {
+        "rank": 1,
+        "propensity": 1.0,
+        "ctr": 0.79,
+        "implied_relevance": 0.79
+      },
+      {
+        "rank": 2,
+        "propensity": 0.7071067811865476,
+        "ctr": 0.5469,
+        "implied_relevance": 0.7734333972618457
+      },
+      {
+        "rank": 3,
+        "propensity": 0.5773502691896257,
+        "ctr": 0.4359,
+        "implied_relevance": 0.7550009470192737
+      },
+      {
+        "rank": 4,
+        "propensity": 0.5,
+        "ctr": 0.37195,
+        "implied_relevance": 0.7439
+      },
+      {
+        "rank": 5,
+        "propensity": 0.4472135954999579,
+        "ctr": 0.3277,
+        "implied_relevance": 0.732759476226681
+      },
+      {
+        "rank": 6,
+        "propensity": 0.408248290463863,
+        "ctr": 0.29995,
+        "implied_relevance": 0.7347244483478143
+      },
+      {
+        "rank": 7,
+        "propensity": 0.3779644730092272,
+        "ctr": 0.2725,
+        "implied_relevance": 0.7209672322651011
+      },
+      {
+        "rank": 8,
+        "propensity": 0.3535533905932738,
+        "ctr": 0.2464,
+        "implied_relevance": 0.6969244435374612
+      },
+      {
+        "rank": 9,
+        "propensity": 0.3333333333333333,
+        "ctr": 0.23195,
+        "implied_relevance": 0.69585
+      },
+      {
+        "rank": 10,
+        "propensity": 0.31622776601683794,
+        "ctr": 0.2161,
+        "implied_relevance": 0.6833682023623867
+      },
+      {
+        "rank": 11,
+        "propensity": 0.30151134457776363,
+        "ctr": 0.19975,
+        "implied_relevance": 0.6624958018734911
+      },
+      {
+        "rank": 12,
+        "propensity": 0.28867513459481287,
+        "ctr": 0.18295,
+        "implied_relevance": 0.6337573904894522
+      },
+      {
+        "rank": 13,
+        "propensity": 0.2773500981126146,
+        "ctr": 0.17315,
+        "implied_relevance": 0.6243012033465897
+      },
+      {
+        "rank": 14,
+        "propensity": 0.2672612419124244,
+        "ctr": 0.15775,
+        "implied_relevance": 0.5902464527635892
+      },
+      {
+        "rank": 15,
+        "propensity": 0.2581988897471611,
+        "ctr": 0.14535,
+        "implied_relevance": 0.5629381293712481
+      },
+      {
+        "rank": 16,
+        "propensity": 0.25,
+        "ctr": 0.12985,
+        "implied_relevance": 0.5194
+      },
+      {
+        "rank": 17,
+        "propensity": 0.24253562503633297,
+        "ctr": 0.07005,
+        "implied_relevance": 0.2888235490745171
+      },
+      {
+        "rank": 18,
+        "propensity": 0.23570226039551584,
+        "ctr": 0.0542,
+        "implied_relevance": 0.22995112524186526
+      },
+      {
+        "rank": 19,
+        "propensity": 0.22941573387056177,
+        "ctr": 0.0464,
+        "implied_relevance": 0.20225291098028722
+      },
+      {
+        "rank": 20,
+        "propensity": 0.22360679774997896,
+        "ctr": 0.0421,
+        "implied_relevance": 0.1882769237054823
+      }
+    ],
+    "eta_1.0": [
+      {
+        "rank": 1,
+        "propensity": 1.0,
+        "ctr": 0.79,
+        "implied_relevance": 0.79
+      },
+      {
+        "rank": 2,
+        "propensity": 0.5,
+        "ctr": 0.385,
+        "implied_relevance": 0.77
+      },
+      {
+        "rank": 3,
+        "propensity": 0.3333333333333333,
+        "ctr": 0.2538,
+        "implied_relevance": 0.7614000000000001
+      },
+      {
+        "rank": 4,
+        "propensity": 0.25,
+        "ctr": 0.1852,
+        "implied_relevance": 0.7408
+      },
+      {
+        "rank": 5,
+        "propensity": 0.2,
+        "ctr": 0.14885,
+        "implied_relevance": 0.74425
+      },
+      {
+        "rank": 6,
+        "propensity": 0.16666666666666666,
+        "ctr": 0.119,
+        "implied_relevance": 0.714
+      },
+      {
+        "rank": 7,
+        "propensity": 0.14285714285714285,
+        "ctr": 0.1037,
+        "implied_relevance": 0.7259
+      },
+      {
+        "rank": 8,
+        "propensity": 0.125,
+        "ctr": 0.08575,
+        "implied_relevance": 0.686
+      },
+      {
+        "rank": 9,
+        "propensity": 0.1111111111111111,
+        "ctr": 0.0785,
+        "implied_relevance": 0.7065
+      },
+      {
+        "rank": 10,
+        "propensity": 0.1,
+        "ctr": 0.0723,
+        "implied_relevance": 0.723
+      },
+      {
+        "rank": 11,
+        "propensity": 0.09090909090909091,
+        "ctr": 0.06065,
+        "implied_relevance": 0.66715
+      },
+      {
+        "rank": 12,
+        "propensity": 0.08333333333333333,
+        "ctr": 0.0531,
+        "implied_relevance": 0.6372000000000001
+      },
+      {
+        "rank": 13,
+        "propensity": 0.07692307692307693,
+        "ctr": 0.04625,
+        "implied_relevance": 0.60125
+      },
+      {
+        "rank": 14,
+        "propensity": 0.07142857142857142,
+        "ctr": 0.04525,
+        "implied_relevance": 0.6335000000000001
+      },
+      {
+        "rank": 15,
+        "propensity": 0.06666666666666667,
+        "ctr": 0.03625,
+        "implied_relevance": 0.54375
+      },
+      {
+        "rank": 16,
+        "propensity": 0.0625,
+        "ctr": 0.0312,
+        "implied_relevance": 0.4992
+      },
+      {
+        "rank": 17,
+        "propensity": 0.058823529411764705,
+        "ctr": 0.01635,
+        "implied_relevance": 0.27795000000000003
+      },
+      {
+        "rank": 18,
+        "propensity": 0.05555555555555555,
+        "ctr": 0.0131,
+        "implied_relevance": 0.2358
+      },
+      {
+        "rank": 19,
+        "propensity": 0.05263157894736842,
+        "ctr": 0.01145,
+        "implied_relevance": 0.21755000000000002
+      },
+      {
+        "rank": 20,
+        "propensity": 0.05,
+        "ctr": 0.00905,
+        "implied_relevance": 0.181
+      }
+    ],
+    "eta_1.5": [
+      {
+        "rank": 1,
+        "propensity": 1.0,
+        "ctr": 0.79,
+        "implied_relevance": 0.79
+      },
+      {
+        "rank": 2,
+        "propensity": 0.3535533905932738,
+        "ctr": 0.2722,
+        "implied_relevance": 0.7698978633559129
+      },
+      {
+        "rank": 3,
+        "propensity": 0.19245008972987523,
+        "ctr": 0.143,
+        "implied_relevance": 0.7430497964470484
+      },
+      {
+        "rank": 4,
+        "propensity": 0.125,
+        "ctr": 0.09215,
+        "implied_relevance": 0.7372
+      },
+      {
+        "rank": 5,
+        "propensity": 0.0894427190999916,
+        "ctr": 0.06665,
+        "implied_relevance": 0.7451696535018048
+      },
+      {
+        "rank": 6,
+        "propensity": 0.06804138174397717,
+        "ctr": 0.04575,
+        "implied_relevance": 0.6723849343939824
+      },
+      {
+        "rank": 7,
+        "propensity": 0.05399492471560389,
+        "ctr": 0.03905,
+        "implied_relevance": 0.7232161208795059
+      },
+      {
+        "rank": 8,
+        "propensity": 0.04419417382415922,
+        "ctr": 0.0287,
+        "implied_relevance": 0.6494068678417252
+      },
+      {
+        "rank": 9,
+        "propensity": 0.037037037037037035,
+        "ctr": 0.02655,
+        "implied_relevance": 0.7168500000000001
+      },
+      {
+        "rank": 10,
+        "propensity": 0.0316227766016838,
+        "ctr": 0.02285,
+        "implied_relevance": 0.7225804453484745
+      },
+      {
+        "rank": 11,
+        "propensity": 0.02741012223434215,
+        "ctr": 0.01855,
+        "implied_relevance": 0.6767572884720193
+      },
+      {
+        "rank": 12,
+        "propensity": 0.024056261216234404,
+        "ctr": 0.0156,
+        "implied_relevance": 0.6484798223537876
+      },
+      {
+        "rank": 13,
+        "propensity": 0.021334622931739582,
+        "ctr": 0.0123,
+        "implied_relevance": 0.5765276489466918
+      },
+      {
+        "rank": 14,
+        "propensity": 0.019090088708030313,
+        "ctr": 0.01315,
+        "implied_relevance": 0.6888391249050826
+      },
+      {
+        "rank": 15,
+        "propensity": 0.01721325931647741,
+        "ctr": 0.0089,
+        "implied_relevance": 0.5170432767186901
+      },
+      {
+        "rank": 16,
+        "propensity": 0.015625,
+        "ctr": 0.0082,
+        "implied_relevance": 0.5248
+      },
+      {
+        "rank": 17,
+        "propensity": 0.014266801472725469,
+        "ctr": 0.0042,
+        "implied_relevance": 0.2943897416691009
+      },
+      {
+        "rank": 18,
+        "propensity": 0.013094570021973102,
+        "ctr": 0.00345,
+        "implied_relevance": 0.2634679866701076
+      },
+      {
+        "rank": 19,
+        "propensity": 0.012074512308976933,
+        "ctr": 0.0029,
+        "implied_relevance": 0.24017533178909112
+      },
+      {
+        "rank": 20,
+        "propensity": 0.01118033988749895,
+        "ctr": 0.0019,
+        "implied_relevance": 0.16994116628998399
+      }
+    ],
+    "eta_2.0": [
+      {
+        "rank": 1,
+        "propensity": 1.0,
+        "ctr": 0.79,
+        "implied_relevance": 0.79
+      },
+      {
+        "rank": 2,
+        "propensity": 0.25,
+        "ctr": 0.19065,
+        "implied_relevance": 0.7626
+      },
+      {
+        "rank": 3,
+        "propensity": 0.1111111111111111,
+        "ctr": 0.08295,
+        "implied_relevance": 0.74655
+      },
+      {
+        "rank": 4,
+        "propensity": 0.0625,
+        "ctr": 0.04375,
+        "implied_relevance": 0.7
+      },
+      {
+        "rank": 5,
+        "propensity": 0.04000000000000001,
+        "ctr": 0.03015,
+        "implied_relevance": 0.7537499999999998
+      },
+      {
+        "rank": 6,
+        "propensity": 0.027777777777777776,
+        "ctr": 0.01905,
+        "implied_relevance": 0.6858000000000001
+      },
+      {
+        "rank": 7,
+        "propensity": 0.02040816326530612,
+        "ctr": 0.0155,
+        "implied_relevance": 0.7595000000000001
+      },
+      {
+        "rank": 8,
+        "propensity": 0.015625,
+        "ctr": 0.0095,
+        "implied_relevance": 0.608
+      },
+      {
+        "rank": 9,
+        "propensity": 0.012345679012345678,
+        "ctr": 0.00745,
+        "implied_relevance": 0.60345
+      },
+      {
+        "rank": 10,
+        "propensity": 0.010000000000000002,
+        "ctr": 0.00725,
+        "implied_relevance": 0.7249999999999999
+      },
+      {
+        "rank": 11,
+        "propensity": 0.008264462809917356,
+        "ctr": 0.00585,
+        "implied_relevance": 0.70785
+      },
+      {
+        "rank": 12,
+        "propensity": 0.006944444444444444,
+        "ctr": 0.00395,
+        "implied_relevance": 0.5688000000000001
+      },
+      {
+        "rank": 13,
+        "propensity": 0.00591715976331361,
+        "ctr": 0.0026,
+        "implied_relevance": 0.4393999999999999
+      },
+      {
+        "rank": 14,
+        "propensity": 0.00510204081632653,
+        "ctr": 0.00315,
+        "implied_relevance": 0.6174000000000001
+      },
+      {
+        "rank": 15,
+        "propensity": 0.0044444444444444444,
+        "ctr": 0.00275,
+        "implied_relevance": 0.6187499999999999
+      },
+      {
+        "rank": 16,
+        "propensity": 0.00390625,
+        "ctr": 0.002,
+        "implied_relevance": 0.512
+      },
+      {
+        "rank": 17,
+        "propensity": 0.0034602076124567475,
+        "ctr": 0.0012,
+        "implied_relevance": 0.34679999999999994
+      },
+      {
+        "rank": 18,
+        "propensity": 0.0030864197530864196,
+        "ctr": 0.00075,
+        "implied_relevance": 0.24300000000000002
+      },
+      {
+        "rank": 19,
+        "propensity": 0.0027700831024930744,
+        "ctr": 0.00065,
+        "implied_relevance": 0.23465000000000003
+      },
+      {
+        "rank": 20,
+        "propensity": 0.0025000000000000005,
+        "ctr": 0.0007,
+        "implied_relevance": 0.2799999999999999
+      }
+    ]
+  },
+  "interpretation": "implied_relevance = ctr / propensity declines with rank because BM25 is a competent policy: it places genuinely relevant products first, and the sampled negatives sink to the bottom. That decline is real relevance signal, not a simulator defect -- the unit tests verify a flat ratio under a random policy. It is also precisely why naive click training fails: observed CTR conflates position bias with relevance, and no amount of click data separates them without knowing or estimating the propensities."
+}
