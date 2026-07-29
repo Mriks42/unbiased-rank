@@ -115,9 +115,29 @@ class TestEncodeCached:
         encoder.encode_cached(["a", "b", "c"], cache, show_progress=False)
 
         meta = json.loads(cache.with_suffix(".meta.json").read_text(encoding="utf-8"))
-        assert meta["model_name"] == "stub-model"
+        # Identity carries max_seq_length as well as the model name.
+        assert meta["model_name"].startswith("stub-model")
         assert meta["n_texts"] == 3
         assert meta["dimension"] == 8
+
+    def test_changed_max_seq_length_invalidates_cache(self, tmp_path: Path) -> None:
+        """Truncation changes the embeddings, so it must change cache identity.
+
+        Without this, switching max_seq_length would reuse embeddings produced
+        under a different truncation and silently mix two representations.
+        """
+        cache = tmp_path / "emb.npy"
+        texts = ["alpha", "beta"]
+
+        short = StubEncoder()
+        short.max_seq_length = 32
+        short.encode_cached(texts, cache, show_progress=False)
+
+        longer = StubEncoder()
+        longer.max_seq_length = 64
+        longer.encode_cached(texts, cache, show_progress=False)
+
+        assert longer.encode_calls == 1  # re-encoded despite an existing cache
 
     def test_fingerprint_roundtrips_through_json(self, tmp_path: Path) -> None:
         encoder = StubEncoder()

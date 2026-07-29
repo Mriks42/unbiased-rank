@@ -7,6 +7,8 @@ meaningful if k1/b defaults are ever retuned.
 
 from __future__ import annotations
 
+import time
+
 import numpy as np
 import pytest
 
@@ -123,3 +125,31 @@ class TestBM25:
         assert scores[0] == 0.0
         assert scores[1] == 0.0
         assert scores[2] > 0.0
+
+    def test_scoring_cost_is_independent_of_corpus_size(self) -> None:
+        """Scoring a fixed candidate set must not scale with the corpus.
+
+        Regression guard. An earlier implementation densified one full corpus
+        column per query term, allocating n_documents floats per lookup. It was
+        correct but scaled with the corpus, which at 1.2M products turned a
+        seconds-long evaluation into an hours-long one. Correctness tests alone
+        would not have caught that.
+        """
+        common = ["red running shoes size ten"]
+        small = BM25Index(common * 500)
+        large = BM25Index(common * 20_000)
+        candidates = np.arange(20, dtype=np.int64)
+
+        def elapsed(index: BM25Index) -> float:
+            start = time.perf_counter()
+            for _ in range(200):
+                index.score("red running shoes", candidates)
+            return time.perf_counter() - start
+
+        small_time = elapsed(small)
+        large_time = elapsed(large)
+
+        # A corpus 40x larger must not cost anywhere near 40x. The bound is
+        # loose because wall-clock timing is noisy; the broken version exceeded
+        # it by orders of magnitude.
+        assert large_time < max(small_time * 5.0, 0.5)

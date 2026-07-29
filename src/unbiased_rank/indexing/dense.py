@@ -79,6 +79,7 @@ class DenseEncoder:
         self.model_name = model_name
         self.batch_size = batch_size
         self.device = device
+        self.max_seq_length: int | None = None  # None keeps the model default.
         self._model: object | None = None  # Loaded lazily; import is slow.
 
     def _load_model(self) -> object:
@@ -86,8 +87,19 @@ class DenseEncoder:
             from sentence_transformers import SentenceTransformer
 
             logger.info("loading encoder %s on %s", self.model_name, self.device)
-            self._model = SentenceTransformer(self.model_name, device=self.device)
+            model = SentenceTransformer(self.model_name, device=self.device)
+            if self.max_seq_length is not None:
+                model.max_seq_length = self.max_seq_length
+            self._model = model
         return self._model
+
+    def _cache_identity(self) -> str:
+        """Model identity for the cache fingerprint.
+
+        Includes max_seq_length, since a different truncation produces
+        different embeddings from the same model and must invalidate the cache.
+        """
+        return f"{self.model_name}@msl={self.max_seq_length}"
 
     def encode(self, texts: Sequence[str], show_progress: bool = False) -> FloatArray:
         """Encode texts to L2-normalised float32 embeddings."""
@@ -106,7 +118,7 @@ class DenseEncoder:
     ) -> FloatArray:
         """Encode with a disk cache guarded by a fingerprint."""
         meta_path = cache_path.with_suffix(".meta.json")
-        expected = fingerprint_texts(texts, self.model_name)
+        expected = fingerprint_texts(texts, self._cache_identity())
 
         if cache_path.exists() and meta_path.exists():
             stored = EmbeddingFingerprint(**json.loads(meta_path.read_text(encoding="utf-8")))
@@ -124,7 +136,7 @@ class DenseEncoder:
         cache_path.parent.mkdir(parents=True, exist_ok=True)
         np.save(cache_path, embeddings)
         written = EmbeddingFingerprint(
-            model_name=self.model_name,
+            model_name=self._cache_identity(),
             n_texts=len(texts),
             dimension=int(embeddings.shape[1]),
             text_digest=expected.text_digest,

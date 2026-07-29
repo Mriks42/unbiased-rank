@@ -115,25 +115,34 @@ class BM25Index:
         if candidates.size == 0:
             return scores
 
+        term_ids = [
+            tid
+            for tid in (self._vocabulary.get(t) for t in tokenize(query))
+            if tid is not None  # Terms absent from the corpus contribute nothing.
+        ]
+        if not term_ids:
+            return scores
+
+        # Slice candidates first, then the query's terms. The result is
+        # (n_candidates x n_query_terms) -- tens of values, not millions.
+        #
+        # The obvious alternative, densifying one full corpus column per term,
+        # allocates n_documents floats per lookup: ~10 MB each at 1.2M products,
+        # repeated for every query term of every query. That is ~1 TB of
+        # allocation churn over a full evaluation and is the difference between
+        # this step taking seconds and taking hours.
+        term_index = np.asarray(term_ids, dtype=np.int64)
+        tf_matrix = np.asarray(
+            self._matrix[candidates][:, term_index].todense(), dtype=np.float64
+        )
+
         k1, b = self.params.k1, self.params.b
         norm = 1.0 - b + b * self.doc_lengths[candidates] / self.average_doc_length
+        idf = self._idf[term_index]
 
-        for token in tokenize(query):
-            term_id = self._vocabulary.get(token)
-            if term_id is None:
-                continue  # Term absent from the corpus contributes nothing.
-            tf = self._term_frequencies(term_id, candidates)
-            scores += self._idf[term_id] * tf * (k1 + 1.0) / (tf + k1 * norm)
-        return scores
-
-    def _term_frequencies(
-        self, term_id: int, candidates: npt.NDArray[np.int64]
-    ) -> FloatArray:
-        """Term frequency of one term across the candidate documents."""
-        column = self._csc[:, term_id]
-        # `.toarray()` on a single sparse column is dense in n_documents, which
-        # is fine at 1.2M rows and avoids a Python-level postings intersection.
-        return np.asarray(column.todense()).ravel()[candidates]
+        # Broadcast over (candidates, terms) and sum the term contributions.
+        weighted = tf_matrix * (k1 + 1.0) / (tf_matrix + k1 * norm[:, None])
+        return np.asarray(weighted @ idf, dtype=np.float64)
 
     def score_batch(
         self, queries: Iterable[str], candidate_sets: Iterable[npt.NDArray[np.int64]]
