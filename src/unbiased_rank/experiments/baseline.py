@@ -43,6 +43,7 @@ from unbiased_rank.indexing.fusion import reciprocal_rank_fusion
 from unbiased_rank.indexing.lexical import BM25Index
 from unbiased_rank.ranking.candidates import (
     CandidateSet,
+    add_sampled_negatives,
     build_candidate_sets,
     build_product_row_lookup,
     candidate_size_summary,
@@ -150,6 +151,7 @@ def run_baseline(
     config: DataConfig | None = None,
     split: str = "test",
     sample_queries: int | None = None,
+    candidates_per_query: int = 100,
     seed: int = 0,
 ) -> dict[str, object]:
     """Build indexes, score every arm, and report metrics with CIs."""
@@ -172,6 +174,14 @@ def run_baseline(
         picked = rng.choice(len(candidate_sets), size=sample_queries, replace=False)
         candidate_sets = [candidate_sets[i] for i in sorted(picked)]
         logger.info("sampled %d queries for a faster run", len(candidate_sets))
+
+    judged_only = candidate_sets
+    if candidates_per_query > 0:
+        # Negatives are drawn from the encoded pool, so every candidate is
+        # guaranteed to have an embedding for the dense arm to score.
+        candidate_sets = add_sampled_negatives(
+            candidate_sets, covered_rows, target_size=candidates_per_query, seed=seed
+        )
 
     logger.info("building BM25 index over %d products", len(products))
     started = time.perf_counter()
@@ -211,7 +221,9 @@ def run_baseline(
 
     return {
         "split": split,
+        "candidates_per_query": candidates_per_query,
         "candidates": candidate_size_summary(candidate_sets),
+        "candidates_judged_only": candidate_size_summary(judged_only),
         "arms": {name: arm.summary() for name, arm in arms.items()},
         "comparisons": comparisons,
         "timings": {
@@ -282,12 +294,23 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Run the M2 retrieval baseline.")
     parser.add_argument("--split", default="test", choices=["train", "val", "test"])
     parser.add_argument("--sample-queries", type=int, default=None)
+    parser.add_argument(
+        "--candidates-per-query",
+        type=int,
+        default=100,
+        help="pad candidate sets with sampled negatives to this size; 0 disables padding",
+    )
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--out", type=Path, default=Path("outputs/baseline.json"))
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
-    report = run_baseline(split=args.split, sample_queries=args.sample_queries, seed=args.seed)
+    report = run_baseline(
+        split=args.split,
+        sample_queries=args.sample_queries,
+        candidates_per_query=args.candidates_per_query,
+        seed=args.seed,
+    )
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(report, indent=2, sort_keys=True), encoding="utf-8")

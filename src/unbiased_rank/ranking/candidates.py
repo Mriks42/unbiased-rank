@@ -123,6 +123,91 @@ def build_candidate_sets(
     return rows
 
 
+def add_sampled_negatives(
+    candidate_sets: list[CandidateSet],
+    pool_rows: IntArray,
+    target_size: int,
+    seed: int = 0,
+) -> list[CandidateSet]:
+    """Pad each candidate set with sampled products treated as irrelevant.
+
+    Why this is necessary
+    ---------------------
+    ESCI's judged sets are overwhelmingly relevant: 68% Exact, 89% relevant,
+    median 16 candidates per query. Ordering 16 products of which 14 are
+    relevant is nearly impossible to get wrong -- random ranking scores
+    NDCG@10 = 0.80, leaving only 0.20 of headroom for every effect the project
+    wants to measure.
+
+    It also makes position bias degenerate. Examination probability only
+    matters when many candidates compete for few visible slots; with 16
+    candidates and a 20-slot window, everything is examined and there is no
+    bias to simulate.
+
+    Padding to ~100 candidates matches how production rankers actually operate
+    (order 100-1000 retrieved candidates, mostly irrelevant) and restores the
+    dynamic range the experiment needs.
+
+    The assumption
+    --------------
+    Sampled products are *assumed* irrelevant. With ~19 judged out of 1.2M,
+    a randomly drawn product is almost certainly irrelevant, and this is the
+    standard assumption in the learning-to-rank and dense-retrieval
+    literature. It remains an assumption and belongs in threats to validity,
+    not buried in a helper.
+
+    Args:
+        candidate_sets: judged candidate sets to augment.
+        pool_rows: catalogue rows eligible as negatives. Must be rows that have
+            embeddings, or dense scoring will have nothing to look up.
+        target_size: desired candidates per query; sets already at or above it
+            are returned unchanged.
+        seed: base seed. Each query derives its own generator from
+            (seed, query_id) so sampling is reproducible and independent of
+            iteration order.
+    """
+    if pool_rows.size == 0:
+        raise ValueError("negative pool is empty")
+
+    augmented: list[CandidateSet] = []
+    for candidate in candidate_sets:
+        n_needed = target_size - len(candidate)
+        if n_needed <= 0:
+            augmented.append(candidate)
+            continue
+
+        rng = np.random.default_rng([seed, candidate.query_id])
+        judged = set(candidate.product_rows.tolist())
+
+        # Oversample then filter: collisions are rare (tens of judged products
+        # against a pool of hundreds of thousands), so one draw almost always
+        # suffices and this avoids a per-sample Python loop.
+        draw = rng.choice(pool_rows, size=min(n_needed * 2 + 16, pool_rows.size), replace=False)
+        negatives = np.fromiter(
+            (row for row in draw.tolist() if row not in judged),
+            dtype=np.int64,
+        )[:n_needed]
+
+        augmented.append(
+            CandidateSet(
+                query_id=candidate.query_id,
+                query_text=candidate.query_text,
+                product_rows=np.concatenate([candidate.product_rows, negatives]),
+                grades=np.concatenate(
+                    [candidate.grades, np.zeros(negatives.size, dtype=np.int64)]
+                ),
+            )
+        )
+
+    logger.info(
+        "padded %d candidate sets to a target of %d candidates (mean now %.1f)",
+        len(augmented),
+        target_size,
+        float(np.mean([len(c) for c in augmented])) if augmented else 0.0,
+    )
+    return augmented
+
+
 def candidate_size_summary(candidate_sets: list[CandidateSet]) -> dict[str, float]:
     """Descriptive stats on candidate-set sizes, for the evaluation writeup."""
     if not candidate_sets:
@@ -142,6 +227,7 @@ def candidate_size_summary(candidate_sets: list[CandidateSet]) -> dict[str, floa
 
 __all__ = [
     "CandidateSet",
+    "add_sampled_negatives",
     "build_candidate_sets",
     "build_product_row_lookup",
     "candidate_size_summary",

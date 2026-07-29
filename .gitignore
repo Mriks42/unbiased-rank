@@ -13,6 +13,14 @@ data/quarantine/
 # Experiment outputs
 mlruns/
 outputs/
+
+# ...but committed result files are the deliverable. A reader should be able to
+# see the numbers without re-running a 25-minute encode, and diffs across
+# commits make it visible when a result changes.
+!outputs/
+outputs/**
+!outputs/*.json
+!outputs/*.md
 .hypothesis/
 .pytest_cache/
 .mypy_cache/

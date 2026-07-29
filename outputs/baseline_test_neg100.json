@@ -1,0 +1,82 @@
+{
+  "arms": {
+    "bm25": {
+      "mrr": 0.972533746548633,
+      "n_queries": 19339.0,
+      "ndcg@10": 0.8895142614387703,
+      "ndcg@10_ci_high": 0.8917460918116945,
+      "ndcg@10_ci_low": 0.88722591242037
+    },
+    "dense": {
+      "mrr": 0.9747512227964253,
+      "n_queries": 19339.0,
+      "ndcg@10": 0.8937452180002682,
+      "ndcg@10_ci_high": 0.8959418740166633,
+      "ndcg@10_ci_low": 0.891489034764534
+    },
+    "random": {
+      "mrr": 0.35842004994056964,
+      "n_queries": 19339.0,
+      "ndcg@10": 0.15434821119486877,
+      "ndcg@10_ci_high": 0.15622743394943947,
+      "ndcg@10_ci_low": 0.15241842204804773
+    },
+    "rrf": {
+      "mrr": 0.9786889377152269,
+      "n_queries": 19339.0,
+      "ndcg@10": 0.9056361643225386,
+      "ndcg@10_ci_high": 0.9076202329883442,
+      "ndcg@10_ci_low": 0.9035873219895976
+    }
+  },
+  "candidates": {
+    "fraction_with_relevant": 1.0,
+    "max_candidates": 136.0,
+    "mean_candidates": 100.00361962872951,
+    "median_candidates": 100.0,
+    "min_candidates": 100.0,
+    "n_queries": 19339.0,
+    "queries_with_relevant": 19339.0
+  },
+  "candidates_judged_only": {
+    "fraction_with_relevant": 1.0,
+    "max_candidates": 136.0,
+    "mean_candidates": 18.730441077615183,
+    "median_candidates": 16.0,
+    "min_candidates": 8.0,
+    "n_queries": 19339.0,
+    "queries_with_relevant": 19339.0
+  },
+  "candidates_per_query": 100,
+  "comparisons": {
+    "dense_minus_bm25": {
+      "ci_high": 0.006027148270107966,
+      "ci_low": 0.002412292936920542,
+      "delta_ndcg@10": 0.00423095656149781,
+      "significant": 1.0
+    },
+    "random_minus_bm25": {
+      "ci_high": -0.7323319767368776,
+      "ci_low": -0.7379064716710516,
+      "delta_ndcg@10": -0.7351660502439016,
+      "significant": 1.0
+    },
+    "rrf_minus_bm25": {
+      "ci_high": 0.01718565687375465,
+      "ci_low": 0.015032666047386426,
+      "delta_ndcg@10": 0.01612190288376815,
+      "significant": 1.0
+    }
+  },
+  "power": {
+    "required_n_for_mde_0.005": 1833.0,
+    "required_n_for_mde_0.010": 459.0,
+    "sigma_d_rrf_vs_bm25": 0.07639725362732094
+  },
+  "split": "test",
+  "timings": {
+    "bm25_ms_per_query": 1.0153221262742809,
+    "bm25_total_s": 19.63531460001832,
+    "dense_total_s": 0.7472284999676049
+  }
+}
