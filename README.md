@@ -21,12 +21,30 @@ Read this before interpreting any number this repo produces.
 | Milestone | State |
 |---|---|
 | M1 — Data foundation (ingest, validation, quarantine, query-level split) | **Complete** |
-| M2 — Retrieval baseline (BM25 + dense + RRF) | Not started |
+| M2 — Retrieval baseline (BM25 + dense + RRF) | **Complete** — see [EVALUATION.md](EVALUATION.md) |
 | M3 — Click simulator | Not started |
 | M4 — The experiment (four arms, sweeps, statistics) | Not started |
 | M5 — Cross-encoder and distillation | Not started |
 | M6 — Serving | Not started |
 | M7 — Deploy and CI | Not started |
+
+## Results so far
+
+Retrieval baseline on the test split (19,339 queries, 100 candidates per query,
+95% bootstrap CIs). Full methodology and caveats in [EVALUATION.md](EVALUATION.md).
+
+| Arm | NDCG@10 | 95% CI |
+|---|---|---|
+| random | 0.1543 | [0.1524, 0.1562] |
+| bm25 | 0.8895 | [0.8872, 0.8917] |
+| dense | 0.8937 | [0.8915, 0.8959] |
+| **rrf** | **0.9056** | [0.9036, 0.9076] |
+
+The random arm is not decoration. It exposed that ESCI's judged-only candidate
+sets are ~89% relevant, so random ranking scored 0.83 and left almost no
+headroom for any effect to show up in. Candidate sets are now padded to 100 with
+sampled negatives, which is also what makes position bias meaningful to simulate
+in M3.
 
 ## Getting the data
 
