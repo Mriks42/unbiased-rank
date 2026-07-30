@@ -22,7 +22,7 @@ Read this before interpreting any number this repo produces.
 |---|---|
 | M1 — Data foundation (ingest, validation, quarantine, query-level split) | **Complete** |
 | M2 — Retrieval baseline (BM25 + dense + RRF) | **Complete** — see [EVALUATION.md](EVALUATION.md) |
-| M3 — Click simulator | Not started |
+| M3 — Click simulator | **Complete** — harness gate passes |
 | M4 — The experiment (four arms, sweeps, statistics) | Not started |
 | M5 — Cross-encoder and distillation | Not started |
 | M6 — Serving | Not started |
@@ -45,6 +45,22 @@ sets are ~89% relevant, so random ranking scored 0.83 and left almost no
 headroom for any effect to show up in. Candidate sets are now padded to 100 with
 sampled negatives, which is also what makes position bias meaningful to simulate
 in M3.
+
+### Simulator validation (M3)
+
+With position bias switched off, clicks are an unbiased sample of relevance, so
+a ranker trained on them should match one trained on true grades. It does:
+
+| Trained on | NDCG@10 | 95% CI |
+|---|---|---|
+| true grades | 0.9079 | [0.9033, 0.9124] |
+| clicks at η=0 | 0.9016 | [0.8968, 0.9063] |
+| **difference** | **−0.0063** | [−0.0080, −0.0046] |
+
+Tolerance ±0.02 — **PASS**. The criterion is deliberately on magnitude rather
+than statistical significance: at 4,000 queries even a trivial gap is
+detectable, and the question is whether the harness is broken, not whether two
+arms differ at all.
 
 ## Getting the data
 
