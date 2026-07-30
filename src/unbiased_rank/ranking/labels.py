@@ -91,7 +91,15 @@ def click_labels(
                 continue
             clicks, propensity = found
             labels[i] = clicks
-            if propensity_weights:
+            # IPS weights apply to *clicked* rows only. The bias being corrected
+            # is in which items were observed as positive: a relevant item deep
+            # in the list is under-clicked because it was rarely examined, and
+            # up-weighting its clicks compensates. A non-click carries no such
+            # bias -- it is not evidence of irrelevance at all, merely absence of
+            # evidence -- so up-weighting non-clicks amplifies noise instead of
+            # correcting anything. This matches the standard IPS-LTR formulation,
+            # where the loss sums over clicked documents weighted by 1/p_k.
+            if propensity_weights and clicks > 0:
                 floor = propensity if clip is None else max(propensity, clip)
                 weights[i] = 1.0 / max(floor, 1e-12)
         label_blocks.append(labels)

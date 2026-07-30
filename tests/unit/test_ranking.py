@@ -279,15 +279,44 @@ class TestLabels:
         clicks = click_labels(_sets(), _log()).labels[0]
         assert not np.array_equal(grades, clicks)
 
-    def test_ips_weights_invert_propensity(self) -> None:
+    def test_ips_weights_apply_to_clicked_rows_only(self) -> None:
+        """The bias is in which items were *observed as positive*.
+
+        A non-click is absence of evidence, not evidence of irrelevance, so
+        up-weighting it amplifies noise rather than correcting bias. Weighting
+        every row was a real bug here: with oracle propensities it drove the
+        corrected arm below both the naive arm and the no-learning floor.
+        """
+        # In _log(), only rows at propensity 1.0 were clicked.
         blocks = click_labels(_sets(), _log(), propensity_weights=True)
         assert blocks.weights is not None
-        assert list(blocks.weights[0]) == pytest.approx([1.0, 2.0, 4.0])
+        # Row 0 clicked at propensity 1.0 -> weight 1. Rows 1-2 not clicked -> 1.
+        assert list(blocks.weights[0]) == pytest.approx([1.0, 1.0, 1.0])
+
+    def test_deep_click_gets_upweighted(self) -> None:
+        sets = [CandidateSet(1, "q", np.array([10, 11]), np.array([3, 3]))]
+        log = pd.DataFrame(
+            {
+                "query_id": [1, 1],
+                "product_row": [10, 11],
+                "clicked": [False, True],  # click at the low-propensity position
+                "propensity": [1.0, 0.25],
+            }
+        )
+        blocks = click_labels(sets, log, propensity_weights=True)
+
+        assert blocks.weights is not None
+        assert list(blocks.weights[0]) == pytest.approx([1.0, 4.0])
 
     def test_clipping_caps_weights(self) -> None:
-        blocks = click_labels(_sets(), _log(), propensity_weights=True, clip=0.5)
+        sets = [CandidateSet(1, "q", np.array([10]), np.array([3]))]
+        log = pd.DataFrame(
+            {"query_id": [1], "product_row": [10], "clicked": [True], "propensity": [0.1]}
+        )
+        blocks = click_labels(sets, log, propensity_weights=True, clip=0.5)
+
         assert blocks.weights is not None
-        assert max(blocks.weights[0]) == pytest.approx(2.0)  # 1 / 0.5
+        assert blocks.weights[0][0] == pytest.approx(2.0)  # 1 / 0.5, not 1 / 0.1
 
     def test_undisplayed_candidates_get_no_evidence(self) -> None:
         """An item never shown produced no evidence; label 0, weight 1."""
