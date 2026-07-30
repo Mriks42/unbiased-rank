@@ -219,6 +219,7 @@ class TestSimulateClickLog:
             "grade",
             "propensity",
             "clicked",
+            "randomized",
         }
         assert len(log) == 10 * 20 * 3
 

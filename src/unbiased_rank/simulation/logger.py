@@ -47,6 +47,7 @@ class LogConfig:
     top_k: int = DEFAULT_TOP_K
     impressions_per_query: int = 5
     seed: int = 0
+    randomize_fraction: float = 0.0
 
     def __post_init__(self) -> None:
         if self.top_k < 1:
@@ -54,6 +55,10 @@ class LogConfig:
         if self.impressions_per_query < 1:
             raise ValueError(
                 f"impressions_per_query must be at least 1, got {self.impressions_per_query}"
+            )
+        if not 0.0 <= self.randomize_fraction <= 1.0:
+            raise ValueError(
+                f"randomize_fraction must be in [0, 1], got {self.randomize_fraction}"
             )
 
 
@@ -80,11 +85,20 @@ def simulate_click_log(
 
     Returns a frame with one row per (impression, displayed rank):
 
-        query_id, impression, rank, product_row, grade, propensity, clicked
+        query_id, impression, rank, product_row, grade, propensity, clicked,
+        randomized
 
     `grade` is retained purely for diagnostics and evaluation. Training arms that
     consume clicks must not read it -- that would be the leak the whole
     experiment exists to avoid.
+
+    When `randomize_fraction > 0`, that share of impressions displays the
+    candidates in a *random* order instead of the policy's. This is intervention
+    harvesting: because document placement is then independent of relevance,
+    click-through rate by rank becomes proportional to the propensity alone,
+    which is what makes propensity estimation possible without knowing the truth.
+    Real systems pay for this in degraded user experience, which is why the
+    fraction is small.
     """
     cfg = config if config is not None else LogConfig()
     rng = np.random.default_rng(cfg.seed)
@@ -96,17 +110,25 @@ def simulate_click_log(
         ranks = np.arange(1, rows.size + 1, dtype=np.int64)
 
         for impression in range(cfg.impressions_per_query):
-            clicked = clicks.sample_clicks(grades, propensities, rng)
+            randomized = bool(rng.random() < cfg.randomize_fraction)
+            if randomized:
+                shuffle = rng.permutation(rows.size)
+                shown_rows, shown_grades = rows[shuffle], grades[shuffle]
+            else:
+                shown_rows, shown_grades = rows, grades
+
+            clicked = clicks.sample_clicks(shown_grades, propensities, rng)
             frames.append(
                 pd.DataFrame(
                     {
-                        "query_id": np.full(rows.size, candidate.query_id, dtype=np.int64),
-                        "impression": np.full(rows.size, impression, dtype=np.int64),
+                        "query_id": np.full(shown_rows.size, candidate.query_id, dtype=np.int64),
+                        "impression": np.full(shown_rows.size, impression, dtype=np.int64),
                         "rank": ranks,
-                        "product_row": rows,
-                        "grade": grades,
+                        "product_row": shown_rows,
+                        "grade": shown_grades,
                         "propensity": propensities,
                         "clicked": clicked,
+                        "randomized": np.full(shown_rows.size, randomized, dtype=bool),
                     }
                 )
             )
@@ -169,6 +191,7 @@ def _empty_log() -> pd.DataFrame:
             "grade": pd.Series(dtype="int64"),
             "propensity": pd.Series(dtype="float64"),
             "clicked": pd.Series(dtype="bool"),
+            "randomized": pd.Series(dtype="bool"),
         }
     )
 
