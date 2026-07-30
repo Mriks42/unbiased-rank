@@ -62,6 +62,13 @@ than statistical significance: at 4,000 queries even a trivial gap is
 detectable, and the question is whether the harness is broken, not whether two
 arms differ at all.
 
+Worth noting for M4: the trained ceiling (0.9079) sits only just above the RRF
+baseline (0.9056), with BM25 alone at 0.8895. The usable band between "no
+learning" and "perfect labels" is therefore about 0.02 wide. If naive training
+on biased clicks does not fall well below 0.8895, the effect will be small
+relative to that band — which would itself be a result worth reporting rather
+than tuning around.
+
 ## Getting the data
 
 ESCI is not vendored in this repository. Download it from
@@ -72,7 +79,22 @@ shopping_queries_dataset_examples.parquet
 shopping_queries_dataset_products.parquet
 ```
 
-**Review the dataset license before deploying this project publicly.** Research-release terms can restrict redistribution and commercial use.
+**License:** ESCI is distributed under **Apache-2.0** (verified against the
+repository's `LICENSE` file, not just its README). Commercial use and
+redistribution are permitted with attribution. Cite Reddy et al. 2022 — the
+citation is in this repo's [LICENSE](LICENSE).
+
+**Download gotcha:** the `raw.githubusercontent.com` URLs return 133-byte
+git-lfs *pointer* files, not data. The real files come from
+`media.githubusercontent.com`:
+
+```powershell
+$base = "https://media.githubusercontent.com/media/amazon-science/esci-data/main/shopping_queries_dataset"
+curl.exe -L -o "data\raw\shopping_queries_dataset_examples.parquet" "$base/shopping_queries_dataset_examples.parquet"
+curl.exe -L -o "data\raw\shopping_queries_dataset_products.parquet" "$base/shopping_queries_dataset_products.parquet"
+```
+
+Roughly 1.1 GB total (examples 49 MB, products 1.06 GB).
 
 ## Setup
 
@@ -81,15 +103,34 @@ python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -e ".[dev]"
 ```
 
+No GPU is required for M1–M4; everything runs CPU-only. M5 (cross-encoder
+fine-tuning) will need one.
+
 ## Running
 
 ```powershell
-# Full test suite — works without the ESCI download (synthetic fixtures)
-.\.venv\Scripts\python.exe -m pytest
+# Test suite — works without the ESCI download (synthetic fixtures throughout)
+.\.venv\Scripts\python.exe -m pytest -m "not requires_model"
 
-# Ingestion (requires the ESCI files above)
-.\.venv\Scripts\python.exe -c "import logging; logging.basicConfig(level=logging.INFO); from unbiased_rank.data.ingest import ingest; print(ingest())"
+# 1. Ingest: validate, quarantine, assign leak-free query-level splits
+.\.venv\Scripts\python.exe -m unbiased_rank.data.ingest
+
+# 2. Encode. Scoped to the splits you need -- the test split touches 313k of
+#    1.2M products (~24 min on 6 CPU cores); "all" takes closer to two hours.
+.\.venv\Scripts\python.exe -m unbiased_rank.indexing.catalog --splits test
+
+# 3. Retrieval baseline: BM25 vs dense vs RRF vs a random floor
+.\.venv\Scripts\python.exe -m unbiased_rank.experiments.baseline --split test
+
+# 4. Simulator calibration: CTR-by-rank across the eta sweep
+.\.venv\Scripts\python.exe -m unbiased_rank.experiments.calibrate_simulator
+
+# 5. Harness validation gate -- run this before trusting any M4 result
+.\.venv\Scripts\python.exe -m unbiased_rank.experiments.harness_gate
 ```
+
+Committed results live in [`outputs/`](outputs/) so the numbers are readable
+without re-running the encode.
 
 ## Design notes
 
@@ -107,19 +148,58 @@ A bad value diverts one row to `data/quarantine/` with a counted reason. A missi
 
 ### The test-set floor is enforced
 
-`min_test_queries` defaults to 5,000, derived from the power analysis for a 0.005 NDCG@10 minimum detectable effect. Ingestion fails loudly rather than silently producing an underpowered comparison.
+`min_test_queries` defaults to 5,000, derived from the power analysis for a 0.005 NDCG@10 minimum detectable effect. Ingestion fails loudly rather than silently producing an underpowered comparison. The measured `σ_d` turned out to be 0.076, so 1,833 queries suffice — the test split has 19,339.
+
+### Candidate sets are padded with sampled negatives
+
+ESCI's judged sets are ~89% relevant, so ordering them is nearly impossible to get wrong. Padding to 100 candidates restores the metric's dynamic range and is also what makes position bias meaningful to simulate — examination probability only matters when many candidates compete for few visible slots. Details and the assumption this rests on are in [EVALUATION.md](EVALUATION.md).
+
+### Features are computed by one shared module
+
+`ranking/features.py` is used by both training and serving. Train/serve skew — features computed slightly differently in the two paths — is the classic silent production failure in ranking, and sharing the code makes it impossible by construction rather than by discipline.
+
+### BM25 scores candidates, not the corpus
+
+Scoring slices candidates first, then the query's terms. An earlier version densified one full corpus column per query term: correct, but allocating ~10 MB per lookup at 1.2M products, which is the difference between a seconds-long evaluation and an hours-long one. A regression test asserts the cost no longer scales with corpus size — the correctness tests passed both before and after, so they would not have caught it.
+
+### Embedding caches carry a fingerprint
+
+Model name, corpus size, `max_seq_length` and a sampled text digest. A stale cache reused after the corpus or model changed would corrupt every downstream number while the run looked perfectly healthy.
 
 ## Layout
 
 ```
 src/unbiased_rank/
-  config.py            # typed, YAML-backed configuration
+  config.py                    # typed, YAML-backed configuration
   data/
-    ingest.py          # load -> validate -> quarantine -> split -> persist
-    schemas.py         # Pandera schemas, quarantine partitioning
-    splits.py          # query-level hashed splits, leak detection
+    ingest.py                  # load -> validate -> quarantine -> split -> persist
+    schemas.py                 # Pandera schemas, quarantine partitioning
+    splits.py                  # query-level hashed splits, leak detection
+  indexing/
+    text.py                    # tokenisation
+    lexical.py                 # BM25 over a sparse term-document matrix
+    dense.py                   # bi-encoder, fingerprinted cache, FAISS index
+    fusion.py                  # reciprocal rank fusion
+    catalog.py                 # scoped catalogue/query encoding
+  ranking/
+    candidates.py              # per-query candidate sets, sampled negatives
+    features.py                # shared train/serve feature extraction
+    lambdamart.py              # LightGBM lambdarank wrapper
+    labels.py                  # per-arm labels: grades, clicks, IPS weights
+  simulation/
+    position_bias.py           # PBM propensity curve, IPS weights
+    click_model.py             # grade -> relevance -> click
+    logger.py                  # impression and click-log generation
+  evaluation/
+    metrics.py                 # NDCG, MRR, Recall (per query, not averaged)
+    statistics.py              # paired bootstrap, power analysis, BH-FDR
+  experiments/
+    baseline.py                # M2 retrieval baseline
+    calibrate_simulator.py     # M3 CTR-vs-propensity calibration
+    harness_gate.py            # M3 validation gate
 tests/
-  unit/                # schema and split behaviour
-  property/            # Hypothesis invariants (leakage, determinism, stability)
-  integration/         # full pipeline against real parquet on disk
+  unit/                        # module behaviour and calibration
+  property/                    # Hypothesis invariants (leakage, determinism)
+  integration/                 # full pipeline against real parquet on disk
+outputs/                       # committed result JSON
 ```
