@@ -23,7 +23,7 @@ Read this before interpreting any number this repo produces.
 | M1 — Data foundation (ingest, validation, quarantine, query-level split) | **Complete** |
 | M2 — Retrieval baseline (BM25 + dense + RRF) | **Complete** — see [EVALUATION.md](EVALUATION.md) |
 | M3 — Click simulator | **Complete** — harness gate passes |
-| M4 — The experiment (four arms, sweeps, statistics) | Not started |
+| M4 — The experiment (four arms, sweeps, statistics) | **Built, not yet run** — see below |
 | M5 — Cross-encoder and distillation | Not started |
 | M6 — Serving | Not started |
 | M7 — Deploy and CI | Not started |
@@ -68,6 +68,27 @@ learning" and "perfect labels" is therefore about 0.02 wide. If naive training
 on biased clicks does not fall well below 0.8895, the effect will be small
 relative to that band — which would itself be a result worth reporting rather
 than tuning around.
+
+### M4 status — built, no results yet
+
+The four-arm runner and all four propensity estimators (oracle, misspecified,
+randomization-based, Regression-EM) are implemented and tested. **No experimental
+results are published yet**, and none should be read into this repo until
+`FINDINGS.md` exists.
+
+The first smoke run caught a bug worth recording. With *oracle* propensities —
+perfect knowledge of the bias — the corrected arm scored 0.8510 against a naive
+arm at 0.8742 and a no-learning floor at 0.8697. Correction cannot plausibly hurt
+that much when the propensities are exactly right, so the fault was the
+implementation: IPS weights were being applied to every row rather than to
+clicked rows only. A non-click is absence of evidence, not evidence of
+irrelevance, and with 80 of 100 candidates never displayed, up-weighting them
+drowned the signal.
+
+It was caught only because the oracle condition has a *known expected
+direction*. Without that control arm it would have read as a finding — "IPS
+correction makes ranking worse" — which is precisely the failure mode this
+project exists to study, encountered in its own code.
 
 ## Getting the data
 
@@ -127,6 +148,10 @@ fine-tuning) will need one.
 
 # 5. Harness validation gate -- run this before trusting any M4 result
 .\.venv\Scripts\python.exe -m unbiased_rank.experiments.harness_gate
+
+# 6. The experiment (M4). Start with the oracle sanity check: with perfect
+#    propensities, correction must help. If it does not, stop and debug.
+.\.venv\Scripts\python.exe -m unbiased_rank.experiments.main_experiment --etas 1.0 --estimators oracle --seeds 0
 ```
 
 Committed results live in [`outputs/`](outputs/) so the numbers are readable
@@ -190,6 +215,8 @@ src/unbiased_rank/
     position_bias.py           # PBM propensity curve, IPS weights
     click_model.py             # grade -> relevance -> click
     logger.py                  # impression and click-log generation
+  propensity/
+    estimators.py              # oracle, misspecified, randomization, regression-EM
   evaluation/
     metrics.py                 # NDCG, MRR, Recall (per query, not averaged)
     statistics.py              # paired bootstrap, power analysis, BH-FDR
@@ -197,6 +224,7 @@ src/unbiased_rank/
     baseline.py                # M2 retrieval baseline
     calibrate_simulator.py     # M3 CTR-vs-propensity calibration
     harness_gate.py            # M3 validation gate
+    main_experiment.py         # M4 four-arm sweep
 tests/
   unit/                        # module behaviour and calibration
   property/                    # Hypothesis invariants (leakage, determinism)
